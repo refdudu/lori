@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Status do Ar-condicionado</title>
+
+    <style>
+      .containerWrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 3rem;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #e9ecef;
+        margin: 0;
+        padding: 0;
+        display: flex;
+
+        flex-direction: column;
+        height: 100vh;
+        gap: 3rem;
+      }
+      .container {
+        text-align: center;
+        padding: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        font-size: 24px;
+        color: #007bff;
+        margin-bottom: 20px;
+      }
+      p {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .status {
+        font-size: 20px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        color: white;
+        margin-top: 15px;
+        display: inline-block;
+        background-color: #007bff;
+      }
+      .status.ligado {
+        background-color: #28a745;
+      }
+      .status.desligado {
+        background-color: #dc3545;
+      }
+    </style>
+    <script>
+      async function atualizarStatus() {
+        try {
+          const response = await fetch("/status", { method: "GET" });
+          const data = await response.json();
+
+          const airConditioningElement =
+            document.getElementById("airConditioning");
+          const humidifierElement = document.getElementById("humidifier");
+
+          const { airConditioning, humidifier } = data;
+
+          function changeElement(element, value) {
+            element.className = value ? "status ligado" : "status desligado";
+            element.innerText = value ? "Ligado" : "Desligado";
+          }
+
+          changeElement(airConditioningElement, airConditioning);
+          changeElement(humidifierElement, humidifier);
+        } catch (error) {
+          console.error("Erro ao atualizar o status:", error);
+        }
+      }
+      setInterval(atualizarStatus, 1000); // Atualiza o status a cada 1 segundo
+      window.onload = atualizarStatus;
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="containerWrapper">
+      <div class="container">
+        <h1>Status do refrigerador</h1>
+        <p class="status" id="airConditioning">Carregando...</p>
+      </div>
+      <div class="container">
+        <h1>Status do umidificador</h1>
+        <p class="status" id="humidifier">Carregando...</p>
+      </div>
+    </div>
+    <div>
+      <h2>Gráfico de temperatura</h2>
+      <canvas id="temperatureChart" width="400" height="200"></canvas>
+    </div>
+    <div>
+      <h2>Gráfico de umidade</h2>
+      <canvas id="humidityChart" width="400" height="200"></canvas>
+    </div>
+    <script>
+      async function getList() {
+        try {
+          const response = await fetch("/list", { method: "GET" });
+          const data = await response.json();
+          return data.list;
+        } catch (error) {
+          console.error("Erro ao atualizar o status:", error);
+          return [];
+        }
+      }
+
+      async function main() {
+        const list = await getList();
+        console.log(list);
+
+        const data = {
+          labels: list.map((x) => x.timestamp), // Rótulos do eixo X
+          datasets: [
+            {
+              label: "Temperatura",
+              data: list.map((x) => x.temperature), // Dados do gráfico
+              borderColor: "rgba(75, 192, 192, 1)", // Cor da linha
+              backgroundColor: "rgba(75, 192, 192, 0.2)", // Cor de fundo
+              borderWidth: 2, // Largura da linha
+              tension: 0.4, // Curvatura da linha
+            },
+          ],
+        };
+
+        const config = {
+          type: "line", // Tipo de gráfico
+          data: data,
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                display: true,
+                position: "top",
+              },
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "Meses",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "Temperatura (°C)",
+                },
+              },
+            },
+          },
+        };
+
+        const ctx = document.getElementById("temperatureChart").getContext("2d");
+        const temperatureChart = new Chart(ctx, config);
+      }
+      window.onload = main;
+    </script>
+  </body>
+</html>
