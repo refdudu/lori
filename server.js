@@ -10,13 +10,11 @@ const port = 3001;
 let data = {
   humidity: 0,
   temperature: 0,
-  timestamp: new Date(),
+  date: new Date(),
 };
 
-let _airConditioning = true;
-let _humidifier = false;
-
 const { TableClient } = require("@azure/data-tables");
+const moment = require("moment");
 const tableClient = TableClient.fromConnectionString(
   connectionString,
   tableName
@@ -28,7 +26,12 @@ async function listTables() {
   for await (const entity of entities) {
     list.push(entity);
   }
-  return list;
+  list.sort((a, b) => (new Date(b.timestamp) > new Date(a.timestamp) ? -1 : 1));
+  const _list = list.map((x) => ({
+    ...x,
+    date: moment(x.timestamp).format("HH:mm:ss"),
+  }));
+  return _list;
 }
 
 app.use(express.json());
@@ -42,19 +45,25 @@ app.get("/list", async (req, res) => {
   }
 });
 app.get("/status", async (req, res) => {
-  res.status(200).json(data);
+  res
+    .status(200)
+    .json({
+      ...data,
+      date: `${moment(data.date).format("L")} ${moment(data.date).format(
+        "LTS"
+      )}`,
+    });
 });
-const get = (bool) => (bool ? "ligado" : "desligado");
 app.post("/", (req, res) => {
   const { humidity, temperature } = req.body;
   data = {
     humidity,
     temperature,
-    timestamp: new Date(),
+    date: new Date(),
   };
   res.status(200).json(data);
 });
-app.get("/", (req, res) => {
+app.get("/", (_, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 app.listen(port, () => console.log("Servidor rodando"));

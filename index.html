@@ -6,11 +6,17 @@
     <title>Status do Ar-condicionado</title>
 
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
       .containerWrapper {
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 3rem;
+        gap: 1rem;
+        padding: 0 1rem;
       }
       body {
         font-family: Arial, sans-serif;
@@ -21,7 +27,7 @@
 
         flex-direction: column;
         height: 100vh;
-        gap: 3rem;
+        gap: 1rem;
       }
       .container {
         text-align: center;
@@ -29,11 +35,24 @@
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
       }
+      header {
+        padding: 1.5rem;
+        background-color: #007bff;
+        color: white;
+        font-size: 1.5rem;
+      }
+      header > span > span {
+        font-weight: bold;
+      }
+
       h1 {
         font-size: 24px;
         color: #007bff;
-        margin-bottom: 20px;
       }
       p {
         font-size: 18px;
@@ -44,7 +63,6 @@
         padding: 10px 20px;
         border-radius: 8px;
         color: white;
-        margin-top: 15px;
         display: inline-block;
         background-color: #007bff;
       }
@@ -54,53 +72,85 @@
       .status.desligado {
         background-color: #dc3545;
       }
+      .chart-container {
+        display: flex;
+        width: 100%;
+      }
+      .chart-container > div {
+        padding: 1rem;
+        flex: 1;
+      }
     </style>
     <script>
-      async function atualizarStatus() {
+      async function atualizarStatus(i) {
+        function changeElement(id, value, className) {
+          const element = document.getElementById(id);
+          element.className = `status ${className}`;
+          element.innerHTML = value;
+        }
         try {
           const response = await fetch("/status", { method: "GET" });
           const data = await response.json();
+          const { humidity, temperature, date } = data;
 
-          const airConditioningElement =
-            document.getElementById("airConditioning");
-          const humidifierElement = document.getElementById("humidifier");
-
-          const { airConditioning, humidifier } = data;
-
-          function changeElement(element, value) {
-            element.className = value ? "status ligado" : "status desligado";
-            element.innerText = value ? "Ligado" : "Desligado";
-          }
-
-          changeElement(airConditioningElement, airConditioning);
-          changeElement(humidifierElement, humidifier);
+          changeElement(
+            "airConditioning",
+            temperature > 25 ? "ligado" : "desligado",
+            temperature > 25 ? "ligado" : "desligado"
+          );
+          changeElement(
+            "humidifier",
+            humidity < 60 ? "ligado" : "desligado",
+            humidity < 60 ? "ligado" : "desligado"
+          );
+          changeElement("temperature", temperature, "");
+          changeElement("humidity", humidity, "");
+          changeElement("timestamp", date, "");
         } catch (error) {
           console.error("Erro ao atualizar o status:", error);
         }
-      }
-      setInterval(atualizarStatus, 1000); // Atualiza o status a cada 1 segundo
-      window.onload = atualizarStatus;
+      } // Atualiza o status a cada 1 segundo
+      Array.from({ length: 100 }, (_, i) => {
+        console.log(i);
+        setTimeout(() => atualizarStatus(i), 1000 * i);
+      });
+      window.onload = () => atualizarStatus(1);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
+    <header>
+      <span> Ultima leitura do sensor: <span id="timestamp"></span> </span>
+    </header>
     <div class="containerWrapper">
       <div class="container">
-        <h1>Status do refrigerador</h1>
-        <p class="status" id="airConditioning">Carregando...</p>
+        <h1>Umidade</h1>
+        <span class="status" id="temperature">Carregando...</span>
       </div>
       <div class="container">
-        <h1>Status do umidificador</h1>
-        <p class="status" id="humidifier">Carregando...</p>
+        <h1>Temperatura</h1>
+        <span class="status" id="humidity">Carregando...</span>
       </div>
     </div>
-    <div>
-      <h2>Gráfico de temperatura</h2>
-      <canvas id="temperatureChart" width="400" height="200"></canvas>
+    <div class="containerWrapper">
+      <div class="container">
+        <h1>Status do umidificador</h1>
+        <span class="status" id="humidifier">Carregando...</span>
+      </div>
+      <div class="container">
+        <h1>Status do refrigerador</h1>
+        <span class="status" id="airConditioning">Carregando...</span>
+      </div>
     </div>
-    <div>
-      <h2>Gráfico de umidade</h2>
-      <canvas id="humidityChart" width="400" height="200"></canvas>
+    <div class="chart-container">
+      <div>
+        <h2>Gráfico de umidade</h2>
+        <canvas id="humidityChart" width="400" height="200"></canvas>
+      </div>
+      <div>
+        <h2>Gráfico de temperatura</h2>
+        <canvas id="temperatureChart" width="400" height="200"></canvas>
+      </div>
     </div>
     <script>
       async function getList() {
@@ -118,23 +168,35 @@
         const list = await getList();
         console.log(list);
 
-        const data = {
-          labels: list.map((x) => x.timestamp), // Rótulos do eixo X
+        const temperatureData = {
+          labels: list.map((x) => x.date), // Rótulos do eixo X
           datasets: [
             {
               label: "Temperatura",
               data: list.map((x) => x.temperature), // Dados do gráfico
-              borderColor: "rgba(75, 192, 192, 1)", // Cor da linha
-              backgroundColor: "rgba(75, 192, 192, 0.2)", // Cor de fundo
+              borderColor: "#f00", // Cor da linha
+              backgroundColor: "#ff000020", // Cor de fundo
               borderWidth: 2, // Largura da linha
               tension: 0.4, // Curvatura da linha
             },
           ],
         };
-
-        const config = {
+        const humidityData = {
+          labels: list.map((x) => x.date), // Rótulos do eixo X
+          datasets: [
+            {
+              label: "Umidade",
+              data: list.map((x) => x.humidity), // Dados do gráfico
+              borderColor: "#00f", // Cor da linha
+              backgroundColor: "#0000ff20", // Cor de fundo
+              borderWidth: 2, // Largura da linha
+              tension: 0.4, // Curvatura da linha
+            },
+          ],
+        };
+        const temperatureConfig = {
           type: "line", // Tipo de gráfico
-          data: data,
+          data: temperatureData,
           options: {
             responsive: true,
             plugins: {
@@ -147,7 +209,7 @@
               x: {
                 title: {
                   display: true,
-                  text: "Meses",
+                  text: "Tempo",
                 },
               },
               y: {
@@ -159,9 +221,43 @@
             },
           },
         };
+        const humidityConfig = {
+          type: "line", // Tipo de gráfico
+          data: humidityData,
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                display: true,
+                position: "top",
+              },
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "Tempo",
+                },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "Umidade (%)",
+                },
+              },
+            },
+          },
+        };
 
-        const ctx = document.getElementById("temperatureChart").getContext("2d");
-        const temperatureChart = new Chart(ctx, config);
+        const temperatureCtx = document
+          .getElementById("temperatureChart")
+          .getContext("2d");
+        new Chart(temperatureCtx, temperatureConfig);
+
+        const humidityCtx = document
+          .getElementById("humidityChart")
+          .getContext("2d");
+        new Chart(humidityCtx, humidityConfig);
       }
       window.onload = main;
     </script>
