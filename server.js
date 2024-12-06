@@ -15,6 +15,8 @@ let data = {
 
 const { TableClient } = require("@azure/data-tables");
 const moment = require("moment");
+moment.locale("pt-br");
+
 const tableClient = TableClient.fromConnectionString(
   connectionString,
   tableName
