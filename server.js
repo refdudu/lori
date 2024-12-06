@@ -31,7 +31,7 @@ async function listTables() {
   list.sort((a, b) => (new Date(b.timestamp) > new Date(a.timestamp) ? -1 : 1));
   const _list = list.map((x) => ({
     ...x,
-    date: moment(x.timestamp).format("HH:mm:ss"),
+    date: moment(x.timestamp).add(-3, "h").format("HH:mm:ss"),
   }));
   return _list;
 }
@@ -47,14 +47,11 @@ app.get("/list", async (req, res) => {
   }
 });
 app.get("/status", async (req, res) => {
-  res
-    .status(200)
-    .json({
-      ...data,
-      date: `${moment(data.date).format("L")} ${moment(data.date).format(
-        "LTS"
-      )}`,
-    });
+  const _date = moment(data.date).add(-3, "h");
+  res.status(200).json({
+    ...data,
+    date: `${_date.format("L")} ${_date.format("LTS")}`,
+  });
 });
 app.post("/", (req, res) => {
   const { humidity, temperature } = req.body;
