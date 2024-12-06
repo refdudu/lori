@@ -103,18 +103,15 @@
             humidity < 60 ? "ligado" : "desligado",
             humidity < 60 ? "ligado" : "desligado"
           );
-          changeElement("temperature", temperature, "");
-          changeElement("humidity", humidity, "");
+          changeElement("temperature", `${temperature} °C`, "");
+          changeElement("humidity", `${humidity}%`, "");
           changeElement("timestamp", date, "");
         } catch (error) {
           console.error("Erro ao atualizar o status:", error);
         }
-      } // Atualiza o status a cada 1 segundo
-      Array.from({ length: 100 }, (_, i) => {
-        console.log(i);
-        setTimeout(() => atualizarStatus(i), 1000 * i);
-      });
-      window.onload = () => atualizarStatus(1);
+      }
+      setInterval(atualizarStatus, 1000);
+      window.onload = atualizarStatus;
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
@@ -124,11 +121,11 @@
     </header>
     <div class="containerWrapper">
       <div class="container">
-        <h1>Umidade</h1>
+        <h1>Temperatura</h1>
         <span class="status" id="temperature">Carregando...</span>
       </div>
       <div class="container">
-        <h1>Temperatura</h1>
+        <h1>Umidade</h1>
         <span class="status" id="humidity">Carregando...</span>
       </div>
     </div>
@@ -144,12 +141,12 @@
     </div>
     <div class="chart-container">
       <div>
-        <h2>Gráfico de umidade</h2>
-        <canvas id="humidityChart" width="400" height="200"></canvas>
-      </div>
-      <div>
         <h2>Gráfico de temperatura</h2>
         <canvas id="temperatureChart" width="400" height="200"></canvas>
+      </div>
+      <div>
+        <h2>Gráfico de umidade</h2>
+        <canvas id="humidityChart" width="400" height="200"></canvas>
       </div>
     </div>
     <script>
