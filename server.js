@@ -5,7 +5,7 @@ const connectionString =
   "DefaultEndpointsProtocol=https;AccountName=unijui;AccountKey=mlNAAwIwvgacISWE3dvF/Wqe/TDudv6vmg6Rfqf2q5Qq7RscFu4XFbUR0GEJhKREx6FoahWs53Bq+AStVoQ6oQ==;EndpointSuffix=core.windows.net";
 const tableName = "mensageria";
 
-const port = 3001;
+const port = 3000;
 
 let data = {
   humidity: 0,
