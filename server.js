@@ -8,9 +8,11 @@ const tableName = "mensageria";
 const port = 3000;
 
 let data = {
-  humidity: 0,
+  humidity: 10,
   temperature: 0,
   date: new Date(),
+  airConditioning: false,
+  humidifier: false,
 };
 
 const { TableClient } = require("@azure/data-tables");
@@ -22,24 +24,23 @@ const tableClient = TableClient.fromConnectionString(
   tableName
 );
 
-async function listTables() {
-  const list = [];
-  const entities = tableClient.listEntities();
-  for await (const entity of entities) {
-    list.push(entity);
-  }
-  list.sort((a, b) => (new Date(b.timestamp) > new Date(a.timestamp) ? -1 : 1));
-  const _list = list.map((x) => ({
-    ...x,
-    date: moment(x.timestamp).add(-3, "h").format("HH:mm:ss"),
-  }));
-  return _list;
-}
+async function listTables() {}
 
 app.use(express.json());
 app.get("/list", async (req, res) => {
   try {
-    const list = await listTables();
+    const list = [];
+    const entities = tableClient.listEntities();
+    for await (const entity of entities) {
+      list.push(entity);
+    }
+    list.sort((a, b) =>
+      new Date(b.timestamp) > new Date(a.timestamp) ? -1 : 1
+    );
+    const _list = list.map((x) => ({
+      ...x,
+      date: moment(x.timestamp).add(-3, "h").format("HH:mm:ss"),
+    }));
     res.status(200).json({ list });
   } catch (e) {
     console.log(e);
@@ -49,7 +50,8 @@ app.get("/list", async (req, res) => {
 app.get("/status", async (req, res) => {
   const _date = moment(data.date).add(-3, "h");
   res.status(200).json({
-    ...data,
+    humidity: data.humidity,
+    temperature: data.temperature,
     date: `${_date.format("L")} ${_date.format("LTS")}`,
   });
 });
@@ -59,6 +61,8 @@ app.post("/", (req, res) => {
     humidity,
     temperature,
     date: new Date(),
+    airConditioning: temperature > 25,
+    humidifier: humidity < 60,
   };
   res.status(200).json(data);
 });
