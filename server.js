@@ -47,15 +47,7 @@ app.get("/status", async (req, res) => {
     temperature,
   } = data;
   const _date = moment(date).add(-3, "h");
-  res.status(200).json({
-    airConditioning,
-    encryptedText,
-    humidifier,
-    humidity,
-    temperature,
-    date: `${_date.format("L")} ${_date.format("LTS")}`,
-    list,
-  });
+  res.status(200).send("OK");
 });
 
 app.post("/status", (req, res) => {
