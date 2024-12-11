@@ -97,7 +97,7 @@ function getDatabase() {
 }
 function addDatabase(data) {
   const database = getDatabase();
-  database.push(data);
+  database = [...database,data]
   fs.writeFileSync(
     path.join(__dirname, "database.json"),
     JSON.stringify(database)
