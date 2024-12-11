@@ -47,7 +47,14 @@ app.get("/status", async (req, res) => {
     temperature,
   } = data;
   const _date = moment(date).add(-3, "h");
-  res.status(200).send("OK");
+  res.status(200).send({
+    airConditioning,
+    date: _date,
+    encryptedText,
+    humidifier,
+    humidity,
+    temperature,
+  });
 });
 
 app.post("/status", (req, res) => {
@@ -68,7 +75,7 @@ app.post("/status", (req, res) => {
       humidifier: humidity < 60,
       list,
     };
-    res.status(200).json(data);
+    res.status(200).json("OK");
   } catch {
     res.status(404);
   }
@@ -89,7 +96,7 @@ function getDatabase() {
 }
 function addDatabase(data) {
   const database = getDatabase();
-  database = [...database,data]
+  database = [...database, data]
   fs.writeFileSync(
     path.join(__dirname, "database.json"),
     JSON.stringify(database)
